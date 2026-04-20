@@ -64,13 +64,20 @@ cd video
 mkdir -p compositions audio subtitles
 ```
 
-## Step 3: Generate a Script for Review
+## Step 3: Confirm Language Preferences
 
-Before writing any scene HTML, draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
+Before drafting the script, confirm with the user:
 
-If the user's prompt does not specify narration language or subtitle preferences, infer from context or ask briefly. Do not assume defaults.
+1. Narration language — what language should the voiceover speak?
+2. Subtitle languages — single language, bilingual, or none?
 
-**The script MUST include narration text for every scene.** Narration drives timing, pacing, and subtitle generation. A script without narration is incomplete. Do NOT present a plan that only has visual descriptions or a table of patterns.
+If the user already specified these in their prompt, skip this step.
+
+## Step 4: Generate a Script for Review
+
+Draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
+
+**Every scene MUST have full narration text** — the actual words the voiceover will speak, not a summary or description. Narration drives timing, pacing, and subtitle generation. A script without narration is incomplete. Do NOT present a plan that only has visual descriptions or a table of patterns.
 
 The script must include per scene:
 
@@ -94,7 +101,7 @@ Scene 1 (0-Ns): [scene title] [Pattern]
 
 Wait for user confirmation before generating compositions or running scripts.
 
-After confirmation, write the JSON file (`script.json`) that feeds the pipeline scripts:
+After confirmation, write the JSON file (`script.json`) that feeds the pipeline scripts. The JSON `lang` and `subtitle_langs` fields should match what the user confirmed in Step 3.
 
 ```json
 {
@@ -118,24 +125,21 @@ After confirmation, write the JSON file (`script.json`) that feeds the pipeline 
 }
 ```
 
-For the chat preview, present a readable version first:
+For the chat preview, present a readable version. The example below is illustrative — adapt the language and content to the user's request:
 
 ```text
-Video Script: HTTPS 加密过程 (~90s, 5 scenes)
-Language: 中文旁白, 中英双语字幕
+Video Script: [Title] (~Ns, N scenes)
+Language: [narration lang], [subtitle langs]
 
-Scene 1 (0-15s): 不安全的互联网
-  Narration: "每次你在浏览器输入网址……"
-  Visual: [Particle Flow] Browser sends plaintext packets, attacker intercepts mid-flight.
-
-Scene 2 (15-35s): TLS 握手
-  Narration: "为了保护数据，客户端和服务器需要先建立安全通道……"
-  Visual: [Chain Reaction] ClientHello → certificate → verification → shared key.
+Scene 1 (0-Ns): [title] [Pattern]
+  Narration: "[full spoken text — the actual words the voiceover will say]"
+  Subtitle: "[translation in secondary language, if bilingual]"
+  Visual: [what the viewer sees — objects moving, transforming, interacting]
 ```
 
 Wait for user confirmation before generating compositions or running scripts.
 
-## Step 4: Generate Scene Compositions
+## Step 5: Generate Scene Compositions
 
 Write one scene per file in `compositions/`. Each scene is a standalone HyperFrames HTML composition that follows `references/hyperframes-contract.md`.
 
@@ -145,7 +149,7 @@ Write one scene per file in `compositions/`. Each scene is a standalone HyperFra
 - keep text minimal and motion dominant
 - lint after each scene with `npx hyperframes lint`
 
-## Step 5: Generate TTS Narration
+## Step 6: Generate TTS Narration
 
 ```bash
 node scripts/tts.mjs --input script.json --lang zh --output audio
@@ -156,7 +160,7 @@ node scripts/tts.mjs --input script.json --lang zh --output audio
 - writes `audio/timing.json` with per-scene metadata and durations when available
 - use `--voice` to override the default voice
 
-## Step 6: Generate Subtitle Overlays
+## Step 7: Generate Subtitle Overlays
 
 ```bash
 node scripts/subtitles.mjs --input script.json --timing audio/timing.json --lang zh,en --output subtitles
@@ -167,7 +171,7 @@ node scripts/subtitles.mjs --input script.json --timing audio/timing.json --lang
 - optional secondary language renders smaller beneath it
 - subtitles are timed to narration duration when timing data exists
 
-## Step 7: Assemble the Root Composition
+## Step 8: Assemble the Root Composition
 
 ```bash
 node scripts/assemble.mjs --input script.json --project . --scenes compositions --audio audio --subs subtitles
@@ -178,7 +182,7 @@ node scripts/assemble.mjs --input script.json --project . --scenes compositions 
 - layers audio tracks and subtitle overlays on top
 - preserves scene-level timing from the script or audio timing metadata
 
-## Step 8: Lint and Render
+## Step 9: Lint and Render
 
 ```bash
 npx hyperframes lint
