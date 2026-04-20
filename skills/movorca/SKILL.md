@@ -68,17 +68,33 @@ mkdir -p compositions audio subtitles
 
 Before writing any scene HTML, draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
 
-The script must include:
+If the user's prompt does not specify narration language or subtitle preferences, infer from context or ask briefly. Do not assume defaults.
 
-- overall title
-- scene titles
-- narration for each scene
-- optional secondary narration for subtitle translation
+**The script MUST include narration text for every scene.** Narration drives timing, pacing, and subtitle generation. A script without narration is incomplete. Do NOT present a plan that only has visual descriptions or a table of patterns.
+
+The script must include per scene:
+
+- narration (full spoken text, not a summary)
+- secondary narration in another language if the user wants bilingual subtitles
 - chosen animation pattern
 - concise visual direction
 - start time and duration
 
-Use this JSON shape for the actual file that later feeds the scripts:
+Present the script in a readable format like this:
+
+```text
+Video Script: [Title] (~Ns, N scenes)
+Language: [narration language], [subtitle languages]
+
+Scene 1 (0-Ns): [scene title] [Pattern]
+  Narration: "[full spoken text for this scene]"
+  Subtitle: "[translation if bilingual]"
+  Visual: [what the viewer sees — motion, not text]
+```
+
+Wait for user confirmation before generating compositions or running scripts.
+
+After confirmation, write the JSON file (`script.json`) that feeds the pipeline scripts:
 
 ```json
 {
