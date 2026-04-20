@@ -1,0 +1,4 @@
+movorca-output/
+node_modules/
+.DS_Store
+*.mp4
