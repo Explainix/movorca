@@ -1,0 +1,13 @@
+{
+  "name": "movorca",
+  "description": "Generate knowledge explanation videos from natural language. Describe a topic, get an animated MP4.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Explainix",
+    "email": "hello@explainix.com"
+  },
+  "homepage": "https://github.com/Explainix/movorca",
+  "repository": "https://github.com/Explainix/movorca",
+  "license": "MIT",
+  "keywords": ["video", "knowledge", "hyperframes", "animation", "education", "explainer"]
+}

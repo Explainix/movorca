@@ -1,0 +1,12 @@
+{
+  "name": "movorca",
+  "version": "0.1.0",
+  "description": "Claude Code skill for generating knowledge explanation videos using HyperFrames",
+  "keywords": ["claude-code-skill", "video", "hyperframes", "knowledge", "education"],
+  "author": "Explainix",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Explainix/movorca.git"
+  }
+}
