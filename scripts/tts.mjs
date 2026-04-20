@@ -2,21 +2,41 @@ import fs from 'fs/promises';
 import path from 'path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { homedir } from 'node:os';
 
 const execFileAsync = promisify(execFile);
+
+const CONFIG_DIR = path.join(homedir(), '.config', 'movorca');
+const ENV_FILE = path.join(CONFIG_DIR, '.env');
+
+async function loadEnvFile() {
+  try {
+    const content = await fs.readFile(ENV_FILE, 'utf-8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) continue;
+      const key = trimmed.slice(0, eqIndex).trim();
+      let value = trimmed.slice(eqIndex + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // no config file yet, that's fine
+  }
+}
+
+await loadEnvFile();
+
 const API_BASE = 'https://api.minimaxi.com/v1';
 const API_KEY = process.env.MINIMAX_API_KEY;
 const GROUP_ID = process.env.MINIMAX_GROUP_ID;
 const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
-
-async function fetchWithFallback(url, options) {
-  if (typeof globalThis.fetch === 'function') {
-    return globalThis.fetch(url, options);
-  }
-
-  const { default: fetchImpl } = await import('node-fetch');
-  return fetchImpl(url, options);
-}
 
 function parseArgs(args) {
   const parsed = {};
@@ -84,7 +104,7 @@ async function apiRequest(endpoint, body, { method = 'POST', retries = 3 } = {})
   const url = `${API_BASE}${buildApiPath(endpoint)}`;
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
-    const response = await fetchWithFallback(url, {
+    const response = await fetch(url, {
       method,
       headers: {
         Authorization: `Bearer ${API_KEY}`,
@@ -157,7 +177,7 @@ function extractTaskId(payload) {
 
 async function downloadFile(fileId, outputPath) {
   const url = `${API_BASE}${buildApiPath(`/files/retrieve_content?file_id=${encodeURIComponent(fileId)}`)}`;
-  const response = await fetchWithFallback(url, {
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${API_KEY}`,
     },
@@ -230,7 +250,7 @@ async function generateTTS(text, lang, voiceId) {
 
 async function main() {
   if (!API_KEY) {
-    console.error('Error: MINIMAX_API_KEY environment variable is required.');
+    console.error(`Error: MINIMAX_API_KEY is not set.\n\nSave your credentials to ${ENV_FILE}:\n\n  mkdir -p ${CONFIG_DIR}\n  echo 'MINIMAX_API_KEY=your-key' >> ${ENV_FILE}\n  echo 'MINIMAX_GROUP_ID=your-group-id' >> ${ENV_FILE}\n`);
     process.exit(1);
   }
 

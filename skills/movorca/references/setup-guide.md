@@ -51,16 +51,21 @@ npm install
 
 If the plugin is checked out elsewhere, run `npm install` from that directory instead.
 
-## Environment Variables
+## TTS Credentials
 
-Set the MiniMax TTS credentials before using narration generation:
+The TTS script reads credentials from `~/.config/movorca/.env`. Create the file once:
 
 ```bash
-export MINIMAX_API_KEY="your-api-key"
-export MINIMAX_GROUP_ID="your-group-id"
+mkdir -p ~/.config/movorca
+cat > ~/.config/movorca/.env << 'EOF'
+MINIMAX_API_KEY=your-api-key
+MINIMAX_GROUP_ID=your-group-id
+EOF
 ```
 
-`MINIMAX_GROUP_ID` is optional in the script, but many MiniMax accounts require it.
+`MINIMAX_GROUP_ID` is optional but many MiniMax accounts require it.
+
+Environment variables (`export MINIMAX_API_KEY=...`) also work and take precedence over the config file.
 
 ## Initialize a HyperFrames Project
 

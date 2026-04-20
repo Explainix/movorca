@@ -33,10 +33,27 @@ If muting the video makes the scene confusing, the scene is still too slide-like
 node --version
 ffmpeg -version
 npx hyperframes --version
-npm install
 ```
 
-If anything is missing, read `references/setup-guide.md` and guide the user through installation. Narration generation needs `MINIMAX_API_KEY`, and sometimes `MINIMAX_GROUP_ID`.
+If anything is missing, read `references/setup-guide.md` and guide the user through installation.
+
+Check for TTS credentials:
+
+```bash
+cat ~/.config/movorca/.env 2>/dev/null || echo "no config"
+```
+
+If the config file does not exist or is missing `MINIMAX_API_KEY`, ask the user for their MiniMax API key and group ID, then save them:
+
+```bash
+mkdir -p ~/.config/movorca
+cat > ~/.config/movorca/.env << 'EOF'
+MINIMAX_API_KEY=<key from user>
+MINIMAX_GROUP_ID=<group id from user>
+EOF
+```
+
+The TTS script reads `~/.config/movorca/.env` automatically. The user only needs to do this once.
 
 ## Step 2: Initialize Project
 
