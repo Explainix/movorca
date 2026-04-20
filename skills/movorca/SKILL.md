@@ -102,42 +102,55 @@ npx hyperframes render --output output.mp4
 
 Report the output file path to the user.
 
-## Scene Types
+## CRITICAL: This is Concept Animation, NOT Slides
 
-Choose the right type for each knowledge point:
+**You are making an explanation animation, not a presentation.**
 
-| Type | Best For | Visual Pattern |
-|------|----------|----------------|
-| Title | Opening hook | Large text + icon/shape animation |
-| Diagram | Relationships, systems | SVG nodes + animated connections |
-| Flowchart | Processes, decisions | Boxes + arrows, sequential reveal |
-| Step-by-step | Procedures, sequences | Numbered items, staggered entrance |
-| Comparison | A vs B, before/after | Side-by-side panels |
-| Timeline | History, evolution | Horizontal progression |
-| Data | Statistics, metrics | Charts, counters, progress bars |
-| Code | Technical concepts | Syntax-highlighted blocks with highlights |
-| Summary | Closing takeaways | Key points with emphasis animation |
+The animation IS the explanation. Objects move, transform, interact, and react to show how concepts work. Text is minimal — only labels and annotations.
 
-Mix scene types for variety. Never use the same type for consecutive scenes.
+Ask yourself: "If I muted the text, would the viewer still understand the concept from the motion alone?" If not, you're making a slideshow.
+
+| WRONG (slideshow) | RIGHT (concept animation) |
+|---|---|
+| Text fades in line by line | Packet flies between servers |
+| Bullet points appear | Bars swap positions to show sorting |
+| Static diagram with labels | Data drops through network layers, each layer pulses |
+| "Step 1: Client sends request" | Browser icon emits a glowing dot that travels to server |
+
+## Animation Patterns
+
+Choose based on what the concept DOES, not what it IS:
+
+| Pattern | Use When | Motion |
+|---------|----------|--------|
+| Particle Flow | Something travels between entities | Object moves along path, endpoints react |
+| Transformation | Something changes form | Object morphs, shakes, recolors |
+| Sorting/Reorder | Things get rearranged | Elements physically swap positions |
+| Zoom & Pan | Exploring a system | Camera moves through large canvas |
+| Accumulation | Building up structure | Pieces stack/connect with physics |
+| Split & Merge | Composition/decomposition | Object breaks apart or combines |
+| Chain Reaction | Cause and effect | Action triggers next action in sequence |
+
+See `references/scene-templates.md` for full SVG + GSAP examples of each pattern.
 
 ## Content Planning Guidelines
 
 - Lead with "why this matters" — hook the viewer
 - One concept per scene — don't overload
-- Use spatial metaphors — left-to-right for sequences, top-to-bottom for hierarchies
-- Animate to reveal — don't show everything at once
-- Vary pacing — dense scenes need more time, simple ones less
-- End with actionable takeaway
+- Think in MOTIONS, not slides: what moves? what transforms? what reacts?
+- Every scene needs a primary animation that carries the explanation
+- Text is supporting — labels, annotations, not paragraphs
+- Vary pacing — dense concepts need more time
 
 ## Visual Style
 
-- Background: dark (#0f172a, #1e1b4b) or gradient
-- Text: high contrast (#f8fafc primary, #94a3b8 secondary)
-- Accents: blue (#3b82f6), green (#10b981), purple (#8b5cf6), amber (#f59e0b)
-- Font: system-ui, clean and readable at 1080p
-- Animation: smooth easing (power2-3), 0.3-0.8s per element
-- Layout: generous whitespace, centered compositions
-- Transitions: cross-fade or cut between scenes
+- All visuals in SVG — crisp at any resolution, precise animation control
+- Background: dark (#0f172a)
+- Entities: dark cards (#1e293b) with colored strokes
+- Accents: blue (#3b82f6), green (#10b981), amber (#f59e0b), purple (#8b5cf6), red (#ef4444)
+- Text: labels only (#94a3b8), emphasis (#f8fafc)
+- Entities react on interaction (pulse, glow, color shift)
+- Smooth easing (power2-3), 0.3-0.8s per animation
 
 ## Rules
 
