@@ -1,162 +1,206 @@
 ---
 name: movorca
-description: Use when the user wants to create a knowledge explanation video, animated explainer, or visual tutorial from a topic description. Triggers on "make a video about", "explain X as video", "create explainer video", "knowledge video", "animated explanation", "视频", "做个视频", "讲解视频".
-allowed-tools: [Bash, Write, Read, Glob, Grep]
+description: Use when the user wants to create a professional knowledge explanation video, concept animation, or visual tutorial with narration and subtitles. Triggers on "make a video about", "explain X as video", "create explainer video", "knowledge video", "animated explanation", "做个视频", "讲解视频", "解释视频", "concept animation".
+allowed-tools: [Bash, Write, Read, Edit, Glob, Grep]
 ---
 
 # Movorca — Knowledge Video Generator
 
-Generate professional animated knowledge explanation videos from natural language. User describes a topic, you produce an MP4.
+Generate professional concept-animation explainer videos from natural language. The user describes a topic, you turn it into a scene script, animated HyperFrames compositions, TTS narration, bilingual subtitle overlays, and a rendered MP4.
 
 ## Workflow
 
-```
-Topic → Analyze Scope → Plan Scenes → Generate Compositions → Assemble → Render MP4
+```text
+Topic → Environment Check → Script → Scene Compositions → TTS → Subtitles → Assemble → Render MP4
 ```
 
-### Step 1: Environment Check
+## Critical Rule: This Is Concept Animation, Not Slides
+
+You are not building a slideshow. The motion itself should explain the idea.
+
+| Wrong | Right |
+|---|---|
+| Text fades in line by line | Packets fly between nodes |
+| Bullet points appear | Shapes split, merge, transform |
+| Static diagram with labels | A chain of events visibly propagates |
+| Paragraphs on screen | Minimal labels supporting the action |
+
+If muting the video makes the scene confusing, the scene is still too slide-like.
+
+## Step 1: Environment Check
 
 ```bash
-node --version && ffmpeg -version && npx hyperframes --version
+node --version
+ffmpeg -version
+npx hyperframes --version
+npm install
 ```
 
-If anything is missing, read `references/setup-guide.md` and guide the user through installation.
+If anything is missing, read `references/setup-guide.md` and guide the user through installation. Narration generation needs `MINIMAX_API_KEY`, and sometimes `MINIMAX_GROUP_ID`.
 
-### Step 2: Initialize Project
+## Step 2: Initialize Project
 
 ```bash
 mkdir -p movorca-output && cd movorca-output
 npx hyperframes init video --non-interactive --example blank
 cd video
+mkdir -p compositions audio subtitles
 ```
 
-### Step 3: Analyze & Plan Scenes
+## Step 3: Generate a Script for Review
 
-Analyze the topic complexity and decide the video structure. The agent determines scene count based on content — NOT a fixed template.
+Before writing any scene HTML, draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
 
-**Planning process:**
-1. Break the topic into core knowledge points
-2. For each point, choose the best visual treatment (see Scene Types below)
-3. Determine scene order for narrative flow
-4. Allocate timing per scene (5-15s each, total adapts to content)
-5. Plan transitions between scenes
+The script must include:
 
-**Present the plan to the user before generating.** Example:
+- overall title
+- scene titles
+- narration for each scene
+- optional secondary narration for subtitle translation
+- chosen animation pattern
+- concise visual direction
+- start time and duration
 
-```
-Video Plan: "How DNS Works" (~60s, 5 scenes)
+Use this JSON shape for the actual file that later feeds the scripts:
 
-Scene 1 (0-8s): Title — "How DNS Works" with animated network icon
-Scene 2 (8-25s): Diagram — browser → resolver → root → TLD → authoritative, arrows animate sequentially
-Scene 3 (25-40s): Step-by-step — the 4 query steps with timing labels
-Scene 4 (40-52s): Comparison — DNS cache hit vs miss, side-by-side
-Scene 5 (52-60s): Summary — 3 key takeaways fade in
-
-Transitions: cross-fade between scenes
-```
-
-Wait for user confirmation before proceeding.
-
-### Step 4: Generate Compositions
-
-**Multi-scene structure:**
-
-```
-video/
-├── index.html                    # Root composition (assembles all scenes)
-├── compositions/
-│   ├── scene-01-title.html       # Each scene is a sub-composition
-│   ├── scene-02-diagram.html
-│   ├── scene-03-steps.html
-│   └── scene-04-summary.html
-└── meta.json
+```json
+{
+  "id": "https-explained",
+  "title": "HTTPS 加密过程",
+  "lang": "zh",
+  "subtitle_langs": ["zh", "en"],
+  "scenes": [
+    {
+      "id": "scene-01",
+      "title": "不安全的互联网",
+      "narration": "每次你在浏览器输入网址……",
+      "narration_secondary": "Every time you type a URL...",
+      "visual": "[Particle Flow] 浏览器发出明文数据包，中途被窃听者截获。",
+      "pattern": "particle-flow",
+      "start": 0,
+      "duration": 15,
+      "transition": "dissolve"  // reserved for Phase 2
+    }
+  ]
+}
 ```
 
-**Root composition (index.html)** references sub-compositions:
+For the chat preview, present a readable version first:
 
-```html
-<div id="root" data-composition-id="video" data-width="1920" data-height="1080">
-  <div class="clip" data-start="0" data-duration="8" data-track-index="0"
-       data-composition-src="compositions/scene-01-title.html"></div>
-  <div class="clip" data-start="8" data-duration="17" data-track-index="0"
-       data-composition-src="compositions/scene-02-diagram.html"></div>
-  <!-- ... more scenes -->
-</div>
+```text
+Video Script: HTTPS 加密过程 (~90s, 5 scenes)
+Language: 中文旁白, 中英双语字幕
+
+Scene 1 (0-15s): 不安全的互联网
+  Narration: "每次你在浏览器输入网址……"
+  Visual: [Particle Flow] Browser sends plaintext packets, attacker intercepts mid-flight.
+
+Scene 2 (15-35s): TLS 握手
+  Narration: "为了保护数据，客户端和服务器需要先建立安全通道……"
+  Visual: [Chain Reaction] ClientHello → certificate → verification → shared key.
 ```
 
-**Each sub-composition** is a self-contained HTML file following the HyperFrames contract (see `references/hyperframes-contract.md`).
+Wait for user confirmation before generating compositions or running scripts.
 
-Generate scenes one at a time. After each scene, run lint:
+## Step 4: Generate Scene Compositions
+
+Write one scene per file in `compositions/`. Each scene is a standalone HyperFrames HTML composition that follows `references/hyperframes-contract.md`.
+
+- use SVG for precise diagrams and physical motion
+- use HTML/CSS for cards, panels, or UI metaphors
+- mix SVG and HTML if that improves clarity
+- keep text minimal and motion dominant
+- lint after each scene with `npx hyperframes lint`
+
+## Step 5: Generate TTS Narration
+
+```bash
+node scripts/tts.mjs --input script.json --lang zh --output audio
+```
+
+- reads the confirmed script
+- generates one MP3 per scene
+- writes `audio/timing.json` with per-scene metadata and durations when available
+- use `--voice` to override the default voice
+
+## Step 6: Generate Subtitle Overlays
+
+```bash
+node scripts/subtitles.mjs --input script.json --timing audio/timing.json --lang zh,en --output subtitles
+```
+
+- generates HyperFrames-compatible subtitle fragments
+- primary language renders large and bright
+- optional secondary language renders smaller beneath it
+- subtitles are timed to narration duration when timing data exists
+
+## Step 7: Assemble the Root Composition
+
+```bash
+node scripts/assemble.mjs --input script.json --project . --scenes compositions --audio audio --subs subtitles
+```
+
+- writes `index.html`
+- references each scene sub-composition
+- layers audio tracks and subtitle overlays on top
+- preserves scene-level timing from the script or audio timing metadata
+
+## Step 8: Lint and Render
 
 ```bash
 npx hyperframes lint
-```
-
-Fix all errors before moving to the next scene.
-
-### Step 5: Render
-
-```bash
 npx hyperframes render --output output.mp4
 ```
 
-Report the output file path to the user.
+Report the generated output path back to the user.
 
-## CRITICAL: This is Concept Animation, NOT Slides
+## Animation Guidance
 
-**You are making an explanation animation, not a presentation.**
+Choose patterns by what the concept does, not by topic name. The main reference lives in `references/animation-patterns.md`.
 
-The animation IS the explanation. Objects move, transform, interact, and react to show how concepts work. Text is minimal — only labels and annotations.
+- `Particle Flow`: something travels between entities
+- `Transformation`: one state turns into another
+- `Reordering`: items swap or re-rank
+- `Zoom & Pan`: move through a larger system
+- `Accumulation`: build a structure layer by layer
+- `Split & Merge`: break apart or recombine
+- `Chain Reaction`: show visible causality
+- `Side-by-Side`: make contrast immediate
+- `Loop`: show repeating cycles
 
-Ask yourself: "If I muted the text, would the viewer still understand the concept from the motion alone?" If not, you're making a slideshow.
+Pattern selection rules:
 
-| WRONG (slideshow) | RIGHT (concept animation) |
-|---|---|
-| Text fades in line by line | Packet flies between servers |
-| Bullet points appear | Bars swap positions to show sorting |
-| Static diagram with labels | Data drops through network layers, each layer pulses |
-| "Step 1: Client sends request" | Browser icon emits a glowing dot that travels to server |
+- start with one dominant pattern per scene
+- combine at most two patterns in a scene
+- prefer action over explanation text
+- let entities react to interaction: pulse, glow, deform, bounce, recolor
+- use labels sparingly and only near the thing they annotate
 
-## Animation Patterns
+## Audio and Subtitle Integration Notes
 
-Choose based on what the concept DOES, not what it IS:
-
-| Pattern | Use When | Motion |
-|---------|----------|--------|
-| Particle Flow | Something travels between entities | Object moves along path, endpoints react |
-| Transformation | Something changes form | Object morphs, shakes, recolors |
-| Sorting/Reorder | Things get rearranged | Elements physically swap positions |
-| Zoom & Pan | Exploring a system | Camera moves through large canvas |
-| Accumulation | Building up structure | Pieces stack/connect with physics |
-| Split & Merge | Composition/decomposition | Object breaks apart or combines |
-| Chain Reaction | Cause and effect | Action triggers next action in sequence |
-
-See `references/scene-templates.md` for full SVG + GSAP examples of each pattern.
-
-## Content Planning Guidelines
-
-- Lead with "why this matters" — hook the viewer
-- One concept per scene — don't overload
-- Think in MOTIONS, not slides: what moves? what transforms? what reacts?
-- Every scene needs a primary animation that carries the explanation
-- Text is supporting — labels, annotations, not paragraphs
-- Vary pacing — dense concepts need more time
+- keep scene HTML focused on visuals; narration and subtitles are handled in the root composition
+- use `audio/timing.json` after TTS so subtitle timing can match the real generated audio
+- if the user wants subtitles in one language only, omit `narration_secondary` and pass a single `--lang`
+- if a scene has no narration, explicitly state that and skip TTS only for that scene if needed
 
 ## Visual Style
 
-- All visuals in SVG — crisp at any resolution, precise animation control
-- Background: dark (#0f172a)
-- Entities: dark cards (#1e293b) with colored strokes
-- Accents: blue (#3b82f6), green (#10b981), amber (#f59e0b), purple (#8b5cf6), red (#ef4444)
-- Text: labels only (#94a3b8), emphasis (#f8fafc)
-- Entities react on interaction (pulse, glow, color shift)
-- Smooth easing (power2-3), 0.3-0.8s per animation
+Default visual language:
+
+- background: `#0f172a`
+- surface cards: `#1e293b`
+- text emphasis: `#f8fafc`
+- secondary labels: `#94a3b8`
+- accent palette: blue `#3b82f6`, green `#10b981`, amber `#f59e0b`, purple `#8b5cf6`, red `#ef4444`
+- typography: clean sans for labels, monospace for code/data values
+- easing: `power2` to `power3` for most movement, `back.out` for reveals, `none` for linear travel
+- pacing: most micro actions should land in `0.3s` to `0.8s`; scene beats typically resolve in `5s` to `18s`
 
 ## Rules
 
 - Resolution: 1920x1080 (16:9)
-- All content self-contained (inline styles, no external assets beyond GSAP CDN)
-- Follow HyperFrames contract strictly (see `references/hyperframes-contract.md`)
-- Use scene templates as starting points (see `references/scene-templates.md`)
-- Always lint after generating each scene
-- Always present the plan and get user confirmation before generating
+- All content self-contained except approved media files and the GSAP CDN
+- Follow `references/hyperframes-contract.md` strictly
+- Use `references/animation-patterns.md` as the creative starting point
+- Always present the script and wait for confirmation before generation
+- Always lint before render
