@@ -1,14 +1,20 @@
 {
   "name": "movorca",
   "description": "Knowledge video generation skill for Claude Code",
+  "owner": {
+    "name": "Explainix",
+    "email": "hello@explainix.com"
+  },
   "plugins": [
     {
       "name": "movorca",
       "description": "Generate knowledge explanation videos from natural language using HyperFrames",
+      "category": "productivity",
       "source": {
-        "type": "github",
-        "repo": "Explainix/movorca"
-      }
+        "source": "url",
+        "url": "https://github.com/Explainix/movorca.git"
+      },
+      "homepage": "https://github.com/Explainix/movorca"
     }
   ]
 }
