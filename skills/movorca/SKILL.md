@@ -77,29 +77,31 @@ If the user already specified these in their prompt, skip this step.
 
 Draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
 
-**Every scene MUST have full narration text** — the actual words the voiceover will speak, not a summary or description. Narration drives timing, pacing, and subtitle generation. A script without narration is incomplete. Do NOT present a plan that only has visual descriptions or a table of patterns.
+**Every scene MUST have all four elements:**
 
-The script must include per scene:
+1. **Scene title + duration** — what this scene is about and how long it lasts
+2. **Visual direction** — what the viewer sees on screen: objects, motion, spatial layout. Describe the animation, not a slide.
+3. **Narration** — the full spoken text for the voiceover. Write the actual words, not a summary. This determines pacing and timing.
+4. **Subtitle translation** — the narration translated into the secondary language (if bilingual)
 
-- narration (full spoken text, not a summary)
-- secondary narration in another language if the user wants bilingual subtitles
-- chosen animation pattern
-- concise visual direction
-- start time and duration
+A script missing any of these is incomplete. Do NOT present a table of patterns or a list of visual descriptions without narration.
 
-Present the script in a readable format like this:
+Present each scene like this:
 
 ```text
-Video Script: [Title] (~Ns, N scenes)
-Language: [narration language], [subtitle languages]
+SC.01  [Scene Title]  [Ns]
 
-Scene 1 (0-Ns): [scene title] [Pattern]
-  Narration: "[full spoken text for this scene]"
-  Subtitle: "[translation if bilingual]"
-  Visual: [what the viewer sees — motion, not text]
+  Visual: Describe what happens on screen — which objects appear,
+          how they move, how they interact. Use verbs, not static descriptions.
+
+  Narration: "The full voiceover text goes here. This is what TTS will
+             speak — not a summary, not a paraphrase, the actual words."
+
+  Subtitle: "Translation in the secondary language,
+            matching the narration sentence by sentence."
 ```
 
-Wait for user confirmation before generating compositions or running scripts.
+Use the user's narration language for the narration field and the secondary language for the subtitle field. Repeat for every scene. Present the full script at once, then wait for user confirmation.
 
 After confirmation, write the JSON file (`script.json`) that feeds the pipeline scripts. The JSON `lang` and `subtitle_langs` fields should match what the user confirmed in Step 3.
 
