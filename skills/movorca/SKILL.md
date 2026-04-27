@@ -6,17 +6,234 @@ allowed-tools: [Bash, Write, Read, Edit, Glob, Grep]
 
 # Movorca — Knowledge Video Generator
 
-Generate professional concept-animation explainer videos from natural language. The user describes a topic, you turn it into a scene script, animated HyperFrames compositions, TTS narration, bilingual subtitle overlays, and a rendered MP4.
+Education-focused layer on top of HyperFrames. You handle script writing, voice selection, and concept-to-animation mapping. HyperFrames handles everything else — composition authoring, TTS, captions, transitions, rendering.
+
+## Prerequisites
+
+Before starting, read the HyperFrames skill at `.agents/skills/hyperframes/SKILL.md`. It is the authoritative reference for composition structure, timeline rules, visual identity, layout, and animation. This skill only adds education-specific guidance on top.
 
 ## Workflow
 
 ```text
-Topic → Environment Check → Script → Scene Compositions → TTS → Subtitles → Assemble → Render MP4
+Topic → Environment Check → DESIGN.md → Script → Scenes → TTS → Captions → Assemble → QA → Render
 ```
 
-## Critical Rule: This Is Concept Animation, Not Slides
+## Step 1: Environment Check
 
-You are not building a slideshow. The motion itself should explain the idea.
+```bash
+node --version        # 22+
+ffmpeg -version
+npx hyperframes --version
+python3 -c "import kokoro_onnx; print('ok')"  # TTS dependency
+```
+
+If `kokoro_onnx` is missing: `pip install kokoro-onnx soundfile`
+If `espeak-ng` is missing (needed for Chinese TTS): `brew install espeak-ng`
+
+## Step 2: Initialize Project
+
+```bash
+mkdir -p movorca-output && cd movorca-output
+npx hyperframes init video --non-interactive --example blank
+cd video
+mkdir -p compositions audio
+```
+
+### Visual Identity (HARD GATE)
+
+Follow the Visual Identity Gate in `.agents/skills/hyperframes/SKILL.md`. Do NOT write any composition HTML until a DESIGN.md exists.
+
+For education videos, default to asking:
+1. What's the mood? (technical / storytelling / energetic)
+2. Light or dark canvas?
+3. Any brand colors?
+
+Then generate a minimal DESIGN.md. If the user doesn't care, use the "dark-premium" palette from `.agents/skills/hyperframes/palettes/dark-premium.md`.
+
+## Step 3: Confirm Language and Voice
+
+Before drafting the script, confirm:
+
+1. Narration language — Chinese or English?
+2. Subtitle languages — single, bilingual, or none?
+
+### Voice Selection
+
+| Language | Voice | Character |
+|---|---|---|
+| Chinese (default) | `zf_xiaobei` | Clear female, tutorial-friendly |
+| Chinese (alt) | `zm_yunjian` | Authoritative male |
+| English (default) | `bf_emma` | Neutral, easy to follow |
+| English (alt) | `am_adam` | Warm male |
+
+Run `npx hyperframes tts --list` to see all 54 voices. Voice ID prefix encodes language: `z`=Mandarin, `a`=American English, `b`=British English.
+
+## Step 4: Draft Script for Review
+
+Draft a structured script. The user revises until satisfied. Do NOT proceed to composition generation without explicit confirmation.
+
+### Education Script Structure
+
+Every scene MUST have all four elements:
+
+1. **Scene title + duration** — what concept this scene explains
+2. **Visual direction** — what the viewer SEES: objects, motion, spatial relationships. Describe animation, not slides. Use verbs.
+3. **Narration** — the full spoken text. Write the actual words TTS will speak, not a summary.
+4. **Subtitle translation** — narration in the secondary language (if bilingual)
+
+### Script Quality Rules
+
+- **Hook in 5 seconds** — the first scene must create curiosity or tension
+- **One concept per scene** — if you need "and" to describe the scene, split it
+- **Narration drives pacing** — scene duration = how long the narration takes to speak
+- **Visual explains, narration reinforces** — if muting the video makes the scene confusing, it's too slide-like
+- **Build on prior scenes** — each scene should reference or transform elements from the previous one
+
+### Concept-to-Animation Mapping
+
+Choose animation patterns by what the concept DOES, not by topic name. See `references/education-patterns.md` for the full pattern library.
+
+Quick reference:
+
+| Concept behavior | Pattern | Example |
+|---|---|---|
+| Something travels between entities | Particle Flow | Network packets, blood circulation, data pipeline |
+| One state becomes another | Transformation | Encryption, compilation, chemical reaction |
+| Items reorder or re-rank | Reordering | Sorting algorithms, priority changes |
+| Navigating a larger system | Zoom & Pan | Cell → organelle, city → building |
+| Building layer by layer | Accumulation | Stack growth, neural network layers |
+| Breaking apart or combining | Split & Merge | Parsing, protein folding |
+| Visible cause → effect | Chain Reaction | Domino logic, event propagation |
+| Comparing two things | Side-by-Side | Before/after, HTTP vs HTTPS |
+| Repeating process | Loop | CPU fetch-decode-execute, heartbeat |
+
+Pattern rules:
+- One dominant pattern per scene, two max
+- Prefer action over text on screen
+- Let entities react: pulse, glow, deform, bounce, recolor
+- Labels are sparse and always near the thing they annotate
+
+### Script Format
+
+Present for review:
+
+```text
+Video Script: [Title] (~Ns, N scenes)
+Language: [narration lang], Subtitles: [subtitle langs]
+
+SC.01  [Scene Title]  [Ns]
+
+  Visual: Describe what happens on screen — objects, motion, interaction.
+
+  Narration: "The full voiceover text. Actual words, not a summary."
+
+  Subtitle: "Translation in secondary language."
+```
+
+After user confirms, write `script.json`:
+
+```json
+{
+  "id": "video-id",
+  "title": "Video Title",
+  "lang": "zh",
+  "subtitle_langs": ["zh", "en"],
+  "voice": "zf_xiaobei",
+  "scenes": [
+    {
+      "id": "scene-01",
+      "title": "Scene Title",
+      "narration": "Full narration text...",
+      "narration_secondary": "English translation...",
+      "visual": "Visual direction description",
+      "pattern": "particle-flow",
+      "duration": 15
+    }
+  ]
+}
+```
+
+## Step 5: Generate Scene Compositions
+
+Write one HTML file per scene in `compositions/`. Follow `.agents/skills/hyperframes/SKILL.md` strictly for:
+
+- Composition structure (`<template>` wrapper, `data-composition-id`, `data-width/height`)
+- Timeline contract (`window.__timelines`, `paused: true`, absolute positions)
+- Layout Before Animation (build end-state first, then add `gsap.from()` entrances)
+- Scene Transitions (entrance animations only, NO exit animations except final scene)
+- Deterministic rules (no `Math.random`, no `setTimeout`, no CSS animations)
+
+Education-specific guidance:
+- Use SVG for diagrams, physical motion, and spatial relationships
+- Use HTML/CSS for cards, panels, UI metaphors, and text-heavy moments
+- Mix SVG and HTML when it improves clarity
+- Keep text minimal — motion carries the explanation
+- Reference `references/education-patterns.md` for concept animation techniques
+
+After each scene, lint:
+
+```bash
+npx hyperframes lint
+```
+
+## Step 6: Generate TTS Narration
+
+For each scene, generate audio using HyperFrames native TTS:
+
+```bash
+npx hyperframes tts "narration text" --voice zf_xiaobei --speed 0.8 --output audio/scene-01.wav
+```
+
+Speed guidance for education:
+- `0.7-0.8` — complex concepts, first explanation
+- `0.9-1.0` — familiar concepts, recap
+- `1.0-1.1` — intro/outro energy
+
+## Step 7: Generate Captions
+
+Transcribe each audio file to get word-level timestamps:
+
+```bash
+npx hyperframes transcribe audio/scene-01.wav --model small --language zh
+```
+
+This produces `transcript.json` with word-level timing. Then build caption compositions following `.agents/skills/hyperframes/references/captions.md`.
+
+For bilingual subtitles: generate captions for the primary language from the transcript, and add secondary language text as a smaller line beneath each caption group.
+
+## Step 8: Assemble Root Composition
+
+Write `index.html` following the HyperFrames composition structure in `.agents/skills/hyperframes/SKILL.md`:
+
+- Scene clips on track 0 via `data-composition-src`
+- Audio clips on track 2
+- Caption overlay composition on track 4
+- Scene timing is absolute from video start
+- Root `data-duration` = sum of all scene durations
+- Add transitions between every scene pair — read `.agents/skills/hyperframes/references/transitions.md`
+
+## Step 9: Quality Checks and Render
+
+```bash
+# Lint
+npx hyperframes lint
+
+# Contrast audit
+npx hyperframes validate
+
+# Key frame snapshots (visual verification)
+npx hyperframes snapshot
+
+# Animation choreography check
+node .agents/skills/hyperframes/scripts/animation-map.mjs . --out .hyperframes/anim-map
+
+# Render
+npx hyperframes render --output output.mp4
+```
+
+Fix any lint/validate issues before rendering. Check snapshots for layout problems. Review animation-map for dead zones or collisions.
+
+## Critical Rule: Concept Animation, Not Slides
 
 | Wrong | Right |
 |---|---|
@@ -27,219 +244,6 @@ You are not building a slideshow. The motion itself should explain the idea.
 
 If muting the video makes the scene confusing, the scene is still too slide-like.
 
-## Step 1: Environment Check
+## Resolution
 
-```bash
-node --version
-ffmpeg -version
-npx hyperframes --version
-```
-
-If anything is missing, read `references/setup-guide.md` and guide the user through installation.
-
-Check for TTS credentials:
-
-```bash
-cat ~/.config/movorca/.env 2>/dev/null || echo "no config"
-```
-
-If the config file does not exist or is missing `MINIMAX_API_KEY`, ask the user for their MiniMax API key and group ID, then save them:
-
-```bash
-mkdir -p ~/.config/movorca
-cat > ~/.config/movorca/.env << 'EOF'
-MINIMAX_API_KEY=<key from user>
-MINIMAX_GROUP_ID=<group id from user>
-EOF
-```
-
-The TTS script reads `~/.config/movorca/.env` automatically. The user only needs to do this once.
-
-## Step 2: Initialize Project
-
-```bash
-mkdir -p movorca-output && cd movorca-output
-npx hyperframes init video --non-interactive --example blank
-cd video
-mkdir -p compositions audio subtitles
-```
-
-## Step 3: Confirm Language Preferences
-
-Before drafting the script, confirm with the user:
-
-1. Narration language — what language should the voiceover speak?
-2. Subtitle languages — single language, bilingual, or none?
-
-If the user already specified these in their prompt, skip this step.
-
-## Step 4: Generate a Script for Review
-
-Draft a structured script and show it to the user for review. The user can revise the script in chat until it feels right.
-
-**Every scene MUST have all four elements:**
-
-1. **Scene title + duration** — what this scene is about and how long it lasts
-2. **Visual direction** — what the viewer sees on screen: objects, motion, spatial layout. Describe the animation, not a slide.
-3. **Narration** — the full spoken text for the voiceover. Write the actual words, not a summary. This determines pacing and timing.
-4. **Subtitle translation** — the narration translated into the secondary language (if bilingual)
-
-A script missing any of these is incomplete. Do NOT present a table of patterns or a list of visual descriptions without narration.
-
-Present each scene like this:
-
-```text
-SC.01  [Scene Title]  [Ns]
-
-  Visual: Describe what happens on screen — which objects appear,
-          how they move, how they interact. Use verbs, not static descriptions.
-
-  Narration: "The full voiceover text goes here. This is what TTS will
-             speak — not a summary, not a paraphrase, the actual words."
-
-  Subtitle: "Translation in the secondary language,
-            matching the narration sentence by sentence."
-```
-
-Use the user's narration language for the narration field and the secondary language for the subtitle field. Repeat for every scene. Present the full script at once, then wait for user confirmation.
-
-After confirmation, write the JSON file (`script.json`) that feeds the pipeline scripts. The JSON `lang` and `subtitle_langs` fields should match what the user confirmed in Step 3.
-
-```json
-{
-  "id": "https-explained",
-  "title": "HTTPS 加密过程",
-  "lang": "zh",
-  "subtitle_langs": ["zh", "en"],
-  "scenes": [
-    {
-      "id": "scene-01",
-      "title": "不安全的互联网",
-      "narration": "每次你在浏览器输入网址……",
-      "narration_secondary": "Every time you type a URL...",
-      "visual": "[Particle Flow] 浏览器发出明文数据包，中途被窃听者截获。",
-      "pattern": "particle-flow",
-      "start": 0,
-      "duration": 15,
-      "transition": "dissolve"  // reserved for Phase 2
-    }
-  ]
-}
-```
-
-For the chat preview, present a readable version. The example below is illustrative — adapt the language and content to the user's request:
-
-```text
-Video Script: [Title] (~Ns, N scenes)
-Language: [narration lang], [subtitle langs]
-
-Scene 1 (0-Ns): [title] [Pattern]
-  Narration: "[full spoken text — the actual words the voiceover will say]"
-  Subtitle: "[translation in secondary language, if bilingual]"
-  Visual: [what the viewer sees — objects moving, transforming, interacting]
-```
-
-Wait for user confirmation before generating compositions or running scripts.
-
-## Step 5: Generate Scene Compositions
-
-Write one scene per file in `compositions/`. Each scene is a standalone HyperFrames HTML composition that follows `references/hyperframes-contract.md`.
-
-- use SVG for precise diagrams and physical motion
-- use HTML/CSS for cards, panels, or UI metaphors
-- mix SVG and HTML if that improves clarity
-- keep text minimal and motion dominant
-- lint after each scene with `npx hyperframes lint`
-
-## Step 6: Generate TTS Narration
-
-```bash
-node scripts/tts.mjs --input script.json --lang zh --output audio
-```
-
-- reads the confirmed script
-- generates one MP3 per scene
-- writes `audio/timing.json` with per-scene metadata and durations when available
-- use `--voice` to override the default voice
-
-## Step 7: Generate Subtitle Overlays
-
-```bash
-node scripts/subtitles.mjs --input script.json --timing audio/timing.json --lang zh,en --output subtitles
-```
-
-- generates HyperFrames-compatible subtitle fragments
-- primary language renders large and bright
-- optional secondary language renders smaller beneath it
-- subtitles are timed to narration duration when timing data exists
-
-## Step 8: Assemble the Root Composition
-
-```bash
-node scripts/assemble.mjs --input script.json --project . --scenes compositions --audio audio --subs subtitles
-```
-
-- writes `index.html`
-- references each scene sub-composition
-- layers audio tracks and subtitle overlays on top
-- preserves scene-level timing from the script or audio timing metadata
-
-## Step 9: Lint and Render
-
-```bash
-npx hyperframes lint
-npx hyperframes render --output output.mp4
-```
-
-Report the generated output path back to the user.
-
-## Animation Guidance
-
-Choose patterns by what the concept does, not by topic name. The main reference lives in `references/animation-patterns.md`.
-
-- `Particle Flow`: something travels between entities
-- `Transformation`: one state turns into another
-- `Reordering`: items swap or re-rank
-- `Zoom & Pan`: move through a larger system
-- `Accumulation`: build a structure layer by layer
-- `Split & Merge`: break apart or recombine
-- `Chain Reaction`: show visible causality
-- `Side-by-Side`: make contrast immediate
-- `Loop`: show repeating cycles
-
-Pattern selection rules:
-
-- start with one dominant pattern per scene
-- combine at most two patterns in a scene
-- prefer action over explanation text
-- let entities react to interaction: pulse, glow, deform, bounce, recolor
-- use labels sparingly and only near the thing they annotate
-
-## Audio and Subtitle Integration Notes
-
-- keep scene HTML focused on visuals; narration and subtitles are handled in the root composition
-- use `audio/timing.json` after TTS so subtitle timing can match the real generated audio
-- if the user wants subtitles in one language only, omit `narration_secondary` and pass a single `--lang`
-- if a scene has no narration, explicitly state that and skip TTS only for that scene if needed
-
-## Visual Style
-
-Default visual language:
-
-- background: `#0f172a`
-- surface cards: `#1e293b`
-- text emphasis: `#f8fafc`
-- secondary labels: `#94a3b8`
-- accent palette: blue `#3b82f6`, green `#10b981`, amber `#f59e0b`, purple `#8b5cf6`, red `#ef4444`
-- typography: clean sans for labels, monospace for code/data values
-- easing: `power2` to `power3` for most movement, `back.out` for reveals, `none` for linear travel
-- pacing: most micro actions should land in `0.3s` to `0.8s`; scene beats typically resolve in `5s` to `18s`
-
-## Rules
-
-- Resolution: 1920x1080 (16:9)
-- All content self-contained except approved media files and the GSAP CDN
-- Follow `references/hyperframes-contract.md` strictly
-- Use `references/animation-patterns.md` as the creative starting point
-- Always present the script and wait for confirmation before generation
-- Always lint before render
+1920x1080 (16:9). All content self-contained except GSAP CDN.

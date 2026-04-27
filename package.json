@@ -3,11 +3,7 @@
   "version": "0.2.0",
   "description": "Claude Code skill for generating knowledge explanation videos using HyperFrames",
   "type": "module",
-  "scripts": {
-    "tts": "node scripts/tts.mjs",
-    "subtitles": "node scripts/subtitles.mjs",
-    "assemble": "node scripts/assemble.mjs"
-  },
+  "scripts": {},
   "keywords": ["claude-code-skill", "video", "hyperframes", "knowledge", "education"],
   "author": "Explainix",
   "license": "MIT",
