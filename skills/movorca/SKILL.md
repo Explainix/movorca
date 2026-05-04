@@ -43,12 +43,23 @@ mkdir -p compositions audio
 
 Follow the Visual Identity Gate in `.agents/skills/hyperframes/SKILL.md`. Do NOT write any composition HTML until a DESIGN.md exists.
 
-For education videos, default to asking:
-1. What's the mood? (technical / storytelling / energetic)
-2. Light or dark canvas?
-3. Any brand colors?
+**Default style: Soft Warm** (`.agents/skills/hyperframes/visual-styles.md` § 9)
 
-Then generate a minimal DESIGN.md. If the user doesn't care, use the "dark-premium" palette from `.agents/skills/hyperframes/palettes/dark-premium.md`.
+Unless the user requests a different style, generate DESIGN.md using Soft Warm:
+
+```
+palette: soft-warm
+background: #F5F0EB
+primary: #3D5A80
+accent: #E07A5F
+secondary: #81B29A
+text: #2B2D42
+font-headline: "Noto Sans SC", sans-serif (700, 40-48px)
+font-body: "Noto Sans SC", sans-serif (400, 32px)
+transitions: crossfade
+```
+
+Do NOT ask mood/canvas/brand questions — go straight to Soft Warm. Only ask if the user explicitly says they want a different look.
 
 ## Step 3: Confirm Language and Voice
 
