@@ -181,6 +181,29 @@ Education-specific guidance:
 - Keep text minimal — motion carries the explanation
 - Reference `references/education-patterns.md` for concept animation techniques
 
+### Drawing Rules (Soft Warm)
+
+These rules apply to every scene composition when using the Soft Warm style:
+
+**Required:**
+- All shapes: rounded corners `rx >= 12`, no sharp-cornered rectangles
+- Strokes: 2-3px, color `#3D5A80`, `stroke-linecap="round"`
+- Shapes have fill layers: base fill + stroke + internal detail lines
+- Represent concepts with concrete icons (computer, server, lock, envelope), not abstract boxes
+- Background: `#F5F0EB` with subtle texture (dot grid or fine lines, opacity 5-8%) plus scattered decorative elements (small circles r=2-4, short lines, tiny crosses) in `#3D5A80` at 10-15% opacity
+- Minimum 8 visible objects per scene (including decoratives)
+- Key terms highlighted in `#E07A5F` on first appearance
+- Data flow: particles with trailing opacity fade or icon-bearing bubbles, not plain rectangles
+- State changes: bouncy scale (`back.out(1.4)`) + color shift to `#E07A5F`
+
+**Prohibited:**
+- `<rect>` with no `rx` as stand-in for entities
+- `font-family: system-ui` — use `"Noto Sans SC", sans-serif`
+- Pure gray fills (`#334155`, `#475569`, `#1e293b`, etc.)
+- Gradient fills or gradient backgrounds
+- Dark/black backgrounds
+- Scenes with fewer than 8 visible objects
+
 After each scene, lint:
 
 ```bash
