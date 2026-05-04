@@ -230,6 +230,20 @@ These rules apply to every scene composition when using the Soft Warm style:
 - Dark/black backgrounds
 - Scenes with fewer than 8 visible objects
 
+### Typography (Soft Warm)
+
+- Font: `"Noto Sans SC", sans-serif` for all text (load via Google Fonts CDN)
+- Scene title: top center, 40-48px, font-weight 700, fill `#2B2D42`
+- Key terms: first occurrence highlighted in `#E07A5F`
+- Subtitles: bottom center, 32px, font-weight 400, white text on semi-transparent bar (`#2B2D42` at 60% opacity)
+- Labels on diagram elements: 20-24px, font-weight 400, fill `#3D5A80`, positioned adjacent to the element they describe
+
+Google Fonts link to include in every composition `<head>`:
+
+```html
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+```
+
 After each scene, lint:
 
 ```bash
