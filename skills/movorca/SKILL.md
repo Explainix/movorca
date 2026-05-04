@@ -92,13 +92,26 @@ Every scene MUST have all four elements:
 3. **Narration** — the full spoken text. Write the actual words TTS will speak, not a summary.
 4. **Subtitle translation** — narration in the secondary language (if bilingual)
 
+### Script Rhythm — Three-Act Structure
+
+Total video: **30-40 seconds, 5 scenes.** Visual changes every 8-15 seconds max. Pacing varies: tension → surprise → relief. Ending is decisive, not a fade-out.
+
+| Scene | Act | Duration | Purpose | Pacing |
+|-------|-----|----------|---------|--------|
+| SC.01 Hook | Act 1 (25%) | 3-5s | Question or counter-intuitive fact | Fast — big text + suspense |
+| SC.02 Concept intro | Act 2 (60%) | 6-8s | Introduce core concept, establish visual metaphor | Medium — elements enter |
+| SC.03 Core demo | Act 2 | 6-8s | Animate the process/principle | Slow then fast — climax |
+| SC.04 Depth/contrast | Act 2 | 6-8s | Add detail or compare | Medium |
+| SC.05 Conclusion | Act 3 (15%) | 5-7s | One-sentence takeaway + strong close | Decisive and clean |
+
 ### Script Quality Rules
 
-- **Hook in 5 seconds** — the first scene must create curiosity or tension
+- **Hook in 5 seconds** — SC.01 must create curiosity or tension immediately
 - **One concept per scene** — if you need "and" to describe the scene, split it
 - **Narration drives pacing** — scene duration = how long the narration takes to speak
 - **Visual explains, narration reinforces** — if muting the video makes the scene confusing, it's too slide-like
 - **Build on prior scenes** — each scene should reference or transform elements from the previous one
+- **No scene longer than 8 seconds** — if narration is longer, split the scene
 
 ### Concept-to-Animation Mapping
 
@@ -129,16 +142,28 @@ Pattern rules:
 Present for review:
 
 ```text
-Video Script: [Title] (~Ns, N scenes)
+Video Script: [Title] (~30-40s, 5 scenes)
 Language: [narration lang], Subtitles: [subtitle langs]
 
-SC.01  [Scene Title]  [Ns]
+SC.01  [Hook]  [3-5s]  Act 1
 
   Visual: Describe what happens on screen — objects, motion, interaction.
 
   Narration: "The full voiceover text. Actual words, not a summary."
 
   Subtitle: "Translation in secondary language."
+
+SC.02  [Concept Intro]  [6-8s]  Act 2
+  ...
+
+SC.03  [Core Demo]  [6-8s]  Act 2
+  ...
+
+SC.04  [Depth/Contrast]  [6-8s]  Act 2
+  ...
+
+SC.05  [Conclusion]  [5-7s]  Act 3
+  ...
 ```
 
 After user confirms, write `script.json`:
@@ -153,12 +178,13 @@ After user confirms, write `script.json`:
   "scenes": [
     {
       "id": "scene-01",
-      "title": "Scene Title",
+      "title": "Hook — Scene Title",
+      "act": 1,
       "narration": "Full narration text...",
       "narration_secondary": "English translation...",
       "visual": "Visual direction description",
       "pattern": "particle-flow",
-      "duration": 15
+      "duration": 5
     }
   ]
 }
